@@ -1,0 +1,5 @@
+.change:focus {
+  box-shadow: none;
+  border: 2px solid #6a82fb;
+  border-color: #6a82fb;
+}
