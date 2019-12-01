@@ -1,13 +1,13 @@
 const db = require("../db/db");
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 const uuidv4 = require("uuid/v4");
 
-exports.login = async (req, res) => {
+exports.login = (req, res) => {
   const { email, password } = req.body;
   let user = db.users.find(user => email === user.email);
-  if(!user) return res.status(400).json({message:'user not found'})
+  if (!user) return res.status(400).json({ message: "user not found" });
   try {
-    await bcrypt.compare(password, user.password, function(err, result) {
+    bcrypt.compare(password, user.password, function(err, result) {
       if (err) throw err;
       if (email === user.email && result === true) {
         return res.json({
@@ -29,26 +29,35 @@ exports.login = async (req, res) => {
     console.log(error);
   }
 };
-exports.signup = async (req, res) => {
+exports.signup = (req, res) => {
   const { email, name, password } = req.body;
+  console.log(email, name, password);
+
   let user = db.users.find(user => email === user.email);
   if (user) {
     return res.status(400).json({ message: "user exist" });
   }
-  await bcrypt.hash(password, 10, function(err, hash) {
-    if (err) {
-      throw err;
-    }
-   db.users.push({
-      id: uuidv4(),
-      name: name,
-      email: email,
-      password: hash,
-      entry: 0,
-      joined: new Date()
+
+  try {
+    bcrypt.hash(password, 10, function(err, hash) {
+      console.log("password in hash", password);
+      if (err) {
+        throw err;
+      }
+      let newUser = {
+        id: uuidv4(),
+        name: name,
+        email: email,
+        password: hash,
+        entry: 0,
+        joined: new Date()
+      };
+      db.users.push(user);
+      res.status(200).json({ message: "sign up OK", data: newUser });
     });
-    res.status(200).json({message:'sign up OK'});
-  });
+  } catch (error) {
+    console.log(error);
+  }
 };
 exports.profile = (req, res) => {
   const { id } = req.params;
